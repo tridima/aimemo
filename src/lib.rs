@@ -1,3 +1,4 @@
+// Modified in aimemo: local-capacity regressions and Rust 1.90 lint compatibility.
 #![deny(clippy::all, clippy::pedantic)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 #![cfg_attr(
@@ -41,6 +42,8 @@
 #![allow(clippy::match_same_arms)]
 #![allow(clippy::if_same_then_else)]
 #![allow(clippy::collapsible_match)]
+// Preserve upstream nested conditionals when Rust 1.90 enables let-chain suggestions.
+#![allow(clippy::collapsible_if)]
 //
 // Performance/ergonomics trade-offs that are acceptable for this codebase:
 #![allow(clippy::needless_pass_by_value)] // Many builders take owned values intentionally
@@ -1389,7 +1392,7 @@ mod tests {
 
     #[test]
     #[allow(deprecated)]
-    fn capacity_limit_enforced() {
+    fn persisted_capacity_limit_ignored_for_local_storage() {
         run_serial_test(|| {
             let dir = tempdir().expect("tmp");
             let path = dir.path().join("capacity.mv2");
@@ -1402,8 +1405,25 @@ mod tests {
             mem.put_bytes(&vec![0xFF; 32]).expect("first put");
             mem.commit().expect("commit");
 
-            let err = mem.put_bytes(&[0xFF; 40]).expect_err("capacity exceeded");
-            assert!(matches!(err, MemvidError::CapacityExceeded { .. }));
+            mem.put_bytes_with_options(
+                &[0xFF; 40],
+                PutOptions::builder()
+                    .uri("mv2://capacity/above-limit")
+                    .build(),
+            )
+            .expect("write beyond stored ticket capacity");
+            mem.commit().expect("commit above stored capacity");
+            drop(mem);
+
+            let mut reopened = Memvid::open(&path).expect("reopen");
+            assert_eq!(reopened.get_capacity(), u64::MAX);
+            let frame = reopened
+                .frame_by_uri("mv2://capacity/above-limit")
+                .expect("persisted frame");
+            assert_eq!(
+                reopened.frame_canonical_payload(frame.id).expect("payload"),
+                vec![0xFF; 40]
+            );
         });
     }
 }

@@ -1,16 +1,20 @@
+# Modified in aimemo: fork metadata, distributable notices/tests, standalone workspace.
+[workspace]
+
 [package]
 name = "memvid-core"
 version = "2.0.140"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.90.0"
 license = "Apache-2.0"
-description = "Core library for Memvid v2, a crash-safe, deterministic, single-file AI memory."
-repository = "https://github.com/memvid/memvid"
+description = "Aimemo: a Memvid-derived single-file AI memory core without local storage-tier caps."
+repository = "https://github.com/tridima/aimemo"
+publish = false
 documentation = "https://docs.memvid.com"
 readme = "README.md"
 keywords = ["ai", "memory", "search", "vector", "embeddings"]
 categories = ["database", "data-structures"]
-include = ["src/**/*", "data/**/*", "Cargo.toml", "README.md"]
+include = ["src/**/*", "data/**/*", "tests/local_capacity.rs", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "AGENTS.md", "rust-toolchain.toml"]
 
 [dependencies]
 once_cell = "1.19.0"

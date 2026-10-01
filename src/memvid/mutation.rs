@@ -1,4 +1,5 @@
 //! Frame mutation and ingestion routines for `Memvid`.
+// Modified in aimemo: remove local storage-tier and persisted-ticket caps.
 //!
 //! Owns the ingest pipeline: bytes/documents → extraction → chunking → metadata/temporal tags
 //! → WAL entries → manifest/index updates. This module keeps mutations crash-safe and
@@ -2860,17 +2861,15 @@ impl Memvid {
     }
 
     pub(crate) fn capacity_limit(&self) -> u64 {
-        if self.toc.ticket_ref.capacity_bytes != 0 {
-            self.toc.ticket_ref.capacity_bytes
-        } else {
-            self.tier().capacity_bytes()
-        }
+        // Modified in aimemo: ignore tier and persisted ticket storage caps, including
+        // those in existing files. Keep file-format and integrity checks intact.
+        u64::MAX
     }
 
     /// Get current storage capacity in bytes.
     ///
-    /// Returns the capacity from the applied ticket, or the default
-    /// tier capacity (1 GB for free tier).
+    /// This aimemo build returns `u64::MAX` regardless of tier or ticket metadata.
+    /// Available disk space and file-format constraints still apply.
     #[must_use]
     pub fn get_capacity(&self) -> u64 {
         self.capacity_limit()

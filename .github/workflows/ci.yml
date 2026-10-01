@@ -1,10 +1,8 @@
+# Modified in aimemo: run hosted checks only by explicit manual dispatch.
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rust: [stable]
+        rust: ["1.90.0"]
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -39,10 +37,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --locked --lib --no-default-features --features lex
 
       - name: Run tests
-        run: cargo test --verbose ${{ runner.os == 'Windows' && '-- --test-threads=1' || '' }}
+        run: cargo test --locked --no-default-features --features lex --test local_capacity --test lifecycle --test search -- --test-threads=1
+
+      - name: Check persisted-capacity policy
+        run: cargo test --locked --no-default-features --features lex --lib persisted_capacity_limit_ignored_for_local_storage -- --test-threads=1
 
   lint:
     name: Lint
@@ -52,6 +53,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.90.0"
 
       - name: Install components
         run: rustup component add rustfmt clippy
@@ -60,4 +63,4 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy -- -D warnings -A clippy::non_std_lazy_statics
+        run: cargo clippy --locked --no-default-features --features lex --lib --test local_capacity

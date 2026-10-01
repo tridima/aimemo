@@ -1,4 +1,5 @@
 //! SIMD-accelerated distance calculations for vector search.
+// Modified in aimemo: keep must-use annotations consistent on scalar fallbacks.
 //!
 //! This module provides optimized L2 (Euclidean) distance functions using
 //! the `wide` crate for portable SIMD across `x86_64` and aarch64.
@@ -73,6 +74,7 @@ pub fn l2_distance_simd(a: &[f32], b: &[f32]) -> f32 {
 
 /// Compute squared L2 distance using scalar math.
 #[cfg(not(feature = "simd"))]
+#[must_use]
 pub fn l2_distance_squared_simd(a: &[f32], b: &[f32]) -> f32 {
     a.iter()
         .zip(b.iter())
@@ -85,6 +87,7 @@ pub fn l2_distance_squared_simd(a: &[f32], b: &[f32]) -> f32 {
 
 /// Compute L2 distance using scalar math.
 #[cfg(not(feature = "simd"))]
+#[must_use]
 pub fn l2_distance_simd(a: &[f32], b: &[f32]) -> f32 {
     l2_distance_squared_simd(a, b).sqrt()
 }

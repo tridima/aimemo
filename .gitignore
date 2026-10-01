@@ -1,3 +1,4 @@
+# Modified in aimemo: exclude local verification reports and packaged artifacts.
 doc.mv2
 *.mv2
 *.mv2-wal
@@ -16,6 +17,7 @@ doc.mv2
 
 
 /target
+/qa/
 **/*.rs.bk
 # Cargo.lock - now committed for reproducible CI builds
 .idea
